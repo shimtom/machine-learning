@@ -1,0 +1,70 @@
+FROM shimtom/anaconda3-ubuntu:latest-gpu
+
+MAINTAINER shimtom
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+        make \
+        cmake \
+        build-essential \
+        libssl-dev \
+        zlib1g-dev \
+        libbz2-dev \
+        libreadline-dev \
+        libsqlite3-dev \
+        wget \
+        curl \
+        llvm \
+        libgtk2.0-0 \
+        libncurses5-dev \
+        libncursesw5-dev \
+        libpng-dev \
+    && apt-get clean
+
+# Set up Japanese environment
+RUN apt-get update && apt-get install -y language-pack-ja && \
+    update-locale LANG=ja_JP.UTF-8 && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
+RUN conda install -y -c conda-forge jupyter_contrib_nbextensions
+RUN conda install -y -c conda-forge tqdm
+RUN conda install -y -c conda-forge plotly=2.0.12
+RUN conda install -y scikit-learn
+
+# install tensorflow
+RUN pip install tensorflow-gpu
+
+RUN pip --no-cache-dir install \
+        yapf \
+        keras \
+        graphviz
+
+# For CUDA profiling, TensorFlow requires CUPTI.
+ENV LD_LIBRARY_PATH /usr/local/cuda/extras/CUPTI/lib64:$LD_LIBRARY_PATH
+
+# Install OpenCV
+# TODO: build opencv for cuda gpu
+# RUN git clone --depth 1 https://github.com/opencv/opencv.git /root/opencv && \
+#     cd /root/opencv && \
+#     mkdir build && \
+#     cd build && \
+#     cmake -DWITH_QT=ON -DWITH_OPENGL=ON -DFORCE_VTK=ON -DWITH_TBB=ON -DWITH_GDAL=ON -DWITH_XINE=ON -DBUILD_EXAMPLES=ON .. && \
+#     make -j"$(nproc)"  && \
+#     make install && \
+#     ldconfig && \
+#     echo 'ln /dev/null /dev/raw1394' >> ~/.bashrc
+
+# Install opencv for cpu
+RUN conda install -y -c menpo opencv3
+
+COPY run_jupyter.sh /
+
+COPY jupyter_notebook_config.py /root/.jupyter/
+
+EXPOSE 8888
+
+VOLUME /home
+
+WORKDIR /home
+
+CMD ["/run_jupyter.sh", "--allow-root"]
