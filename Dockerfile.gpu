@@ -18,7 +18,16 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         libncurses5-dev \
         libncursesw5-dev \
         libpng-dev \
-    && apt-get clean
+        build-essential \
+        libfreetype6-dev \
+        libpng12-dev \
+        libzmq3-dev \
+        pkg-config \
+        rsync \
+        software-properties-common \
+        unzip \
+        && \
+    apt-get clean
 
 # Set up Japanese environment
 RUN apt-get update && apt-get install -y language-pack-ja && \
